@@ -4,7 +4,7 @@ import gin
 from sh import helm, kubectl
 from greenflow.adaptive import os
 import greenflow.g
-from greenflow.playbook import kafka, p, redpanda
+from greenflow.playbook import kafka, kafka_kraft, p, redpanda
 
 
 def embed(globals, locals):
@@ -75,6 +75,15 @@ def kafka_context():
     yield
     kubectl(split("delete kafka theodolite-kafka"))
     helm(split("uninstall -n default kminion"))
+
+@contextmanager
+def kafka_kraft_context():
+    p(kafka_kraft)
+    yield
+    kubectl(split("delete kafka theodolite-kafka"))
+    kubectl(split("delete kafkanodepool --all")) 
+    helm(split("uninstall -n default kminion"))
+
 
 
 @contextmanager

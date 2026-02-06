@@ -1,0 +1,18 @@
+ignore_patterns:
+  - "book/**"
+  - "ansible/project/roles/geerlingguy.containerd.bak/**"
+  - "ansible/project/roles/uc*/**"
+  - "ansible/project/roles/run*/**"
+  - "deploy/**"
+  - "README.md"
+  - "*.lock"
+  - "*.json"
+  - "*.pem"
+  - "*.sh"
+  - bench.py
+  - embed.py
+  - env.yaml
+  - flake.nix
+  - migrate.py
+  - mypy.ini
+  - pyproject.toml

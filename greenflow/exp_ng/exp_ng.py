@@ -295,16 +295,18 @@ def killexp():
             # traceback.print_exc()
             # breakpoint()
         try:
-            kubectl(split("delete kafka theodolite-kafka"), _ok_code=[0, 1])
-            helm(split("uninstall -n default kminion"), _ok_code=[0, 1])
-            helm(split("uninstall -n redpanda redpanda"), _ok_code=[0, 1])
-            helm(split("uninstall -n redpanda kminion"), _ok_code=[0, 1])
-            kubectl(split("delete pvc -n redpanda --all"), _ok_code=[0, 1])
+            pass
+            # TODO: Re-enable when stable
+            # kubectl(split("delete kafka theodolite-kafka"), _ok_code=[0, 1])
+            # helm(split("uninstall -n default kminion"), _ok_code=[0, 1])
+            # helm(split("uninstall -n redpanda redpanda"), _ok_code=[0, 1])
+            # helm(split("uninstall -n redpanda kminion"), _ok_code=[0, 1])
+            # kubectl(split("delete pvc -n redpanda --all"), _ok_code=[0, 1])
             # Restart the Strimzi operator deployment
-            kubectl(
-                split("rollout restart deployment strimzi-cluster-operator -n default"),
-                _ok_code=[0, 1],
-            )
+            # kubectl(
+            #     split("rollout restart deployment strimzi-cluster-operator -n default"),
+            #     _ok_code=[0, 1],
+            # )
         except:
             traceback.print_exc()
             ...

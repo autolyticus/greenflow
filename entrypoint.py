@@ -8,6 +8,7 @@ from greenflow.glue import (
     patch_global_g,
     setup_gin_config,
     kafka_context,
+    kafka_kraft_context,
     redpanda_context,
 )
 from greenflow.playbook import (

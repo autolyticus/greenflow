@@ -1,0 +1,4 @@
+# include '/ingest_base.gin'
+
+greenflow.factors.exp_params.kafka_bootstrap_servers = "theodolite-kafka-kafka-bootstrap:9092"
+greenflow.factors.factors.exp_name = "ingest-kafka-kraft"

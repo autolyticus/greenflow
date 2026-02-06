@@ -8,6 +8,7 @@ from entrypoint import (
     load_gin,
     send_notification,
     kafka_context,
+    kafka_kraft_context,
     redpanda_context,
 )
 import traceback
@@ -37,45 +38,45 @@ def idle(exp_description) -> None:
 
 
 def baseline(exp_description) -> None:
-    exp_names = [
-        "ingest-kafka",
-        "ingest-redpanda",
-    ]
+    exp_names = {
+        "ingest-kafka": kafka_context,
+        "ingest-kafka-kraft": kafka_kraft_context,
+        # "ingest-redpanda": redpanda_context,
+    }
     rep = 3
-    for exp_name in exp_names:
-        ctx_manager = kafka_context if exp_name == "ingest-kafka" else redpanda_context
+    for exp_name, ctx_manager in exp_names.items():
         load_gin(exp_name)
         rebind_parameters(messageSize=4096)
 
         from ..g import g
 
-        rebind_parameters(brokerReplicas=1)
-        with ctx_manager():
-            for _ in range(rep):
-                rebind_parameters(
-                    partitions=20,
-                    consumerInstances=0,
-                    producerInstances=8,
-                    replicationFactor=1,
-                )
-                stress_test(
-                    target_load=10**9,
-                    exp_description=exp_description,
-                )
+        # rebind_parameters(brokerReplicas=1)
+        # with ctx_manager():
+        #     for _ in range(rep):
+        #         rebind_parameters(
+        #             partitions=20,
+        #             consumerInstances=0,
+        #             producerInstances=8,
+        #             replicationFactor=1,
+        #         )
+        #         stress_test(
+        #             target_load=10**9,
+        #             exp_description=exp_description,
+        #         )
 
         rebind_parameters(brokerReplicas=3)
         with ctx_manager():
             for _ in range(rep):
-                rebind_parameters(
-                    partitions=1,
-                    consumerInstances=0,
-                    producerInstances=8,
-                    replicationFactor=1,
-                )
-                stress_test(
-                    target_load=10**9,
-                    exp_description=exp_description,
-                )
+                # rebind_parameters(
+                #     partitions=1,
+                #     consumerInstances=0,
+                #     producerInstances=8,
+                #     replicationFactor=1,
+                # )
+                # stress_test(
+                #     target_load=10**9,
+                #     exp_description=exp_description,
+                # )
                 rebind_parameters(
                     partitions=1,
                     consumerInstances=0,

@@ -1,0 +1,36 @@
+---
+# vim: set ft=yaml:
+
+# - name: Debug YAML output
+#   debug:
+#     msg: "{{ lookup('ansible.builtin.template', item) | from_yaml }}"
+#   with_fileglob:
+#     # - "../templates/kafka*.j2"
+#     - "../templates/kafka-crd.yaml.j2"
+
+- name: Deploy KRaft Kafka
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('ansible.builtin.template', item) | from_yaml }}"
+  with_fileglob:
+    - "../templates/kafka*.j2"
+    # - "../templates/kafka-crd.yaml.j2"
+
+- name: Wait for Kafka to be deployed
+  delegate_to: localhost
+  shell: kubectl wait kafka theodolite-kafka --for=condition=Ready --timeout=600s
+
+- name: Deploy Kminion
+  delegate_to: localhost
+  kubernetes.core.helm:
+    name: kminion
+    create_namespace: true
+    chart_ref: "{{ q('pipe', 'git rev-parse --show-toplevel')[0] }}/charts/kminion/charts/kminion"
+    # chart_version: 0.8.2
+    wait: true
+    release_namespace: default
+    values: "{{ lookup('ansible.builtin.template', 'kminion-values.yaml.j2') | from_yaml }}"
+
+- name: Restart kminion deployment
+  delegate_to: localhost
+  shell: "kubectl rollout restart deployments/kminion"

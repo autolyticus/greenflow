@@ -1,0 +1,157 @@
+{% set controller_replicas = 1 %}
+{% if deployment_type == "production" %}
+  {% set controller_replicas = 3 %}
+{% endif %}
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: controller
+  namespace: default
+  labels:
+    strimzi.io/cluster: theodolite-kafka
+spec:
+  replicas: {{ controller_replicas }}
+  roles:
+    - controller
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: persistent-claim
+        size: 10Gi
+        deleteClaim: true
+        kraftMetadata: shared
+  template:
+    pod:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node.kubernetes.io/broker
+                    operator: In
+                    values:
+                      - "true"
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    strimzi.io/cluster: theodolite-kafka
+                    strimzi.io/name: theodolite-kafka-controller
+                topologyKey: kubernetes.io/hostname
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: broker
+  namespace: default
+  labels:
+    strimzi.io/cluster: theodolite-kafka
+spec:
+  replicas: {{ exp_params.broker_replicas }}
+  roles:
+    - broker
+{% if deployment_type == "production" %}
+  resources:
+    requests:
+      memory: "{{exp_params.broker_mem}}"
+      cpu: "{{exp_params.broker_cpu}}"
+    limits:
+      memory: "{{exp_params.broker_mem}}"
+      cpu: "{{exp_params.broker_cpu}}"
+  jvmOptions:
+    "-Xmx": "{{ exp_params.broker_mem | replace('i', '') }}"
+    "-Xms": "{{ exp_params.broker_mem | replace('i', '') }}"
+{% elif deployment_type == "test" %}
+  resources: {}
+{% endif %}
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: persistent-claim
+        size: 100Gi
+        deleteClaim: true
+        kraftMetadata: shared
+  template:
+    pod:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node.kubernetes.io/broker
+                    operator: In
+                    values:
+                      - "true"
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    strimzi.io/cluster: theodolite-kafka
+                    strimzi.io/name: theodolite-kafka-broker
+                topologyKey: kubernetes.io/hostname
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: theodolite-kafka
+  namespace: default
+  annotations:
+    strimzi.io/node-pools: "enabled"
+    strimzi.io/kraft: "enabled"
+spec:
+  kafka:
+    version: 3.8.0
+    metadataVersion: 3.8-IV0
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          name: theodolite-kafka-metrics
+          key: kafka-metrics-config.yml
+    config:
+      "auto.create.topics.enable": false
+      "message.max.bytes": "15728640" # 15 MB
+      "replica.fetch.max.bytes": "15728640" # 15 MB
+      "default.replication.factor": "1"
+      "offsets.topic.replication.factor": "1"
+      "transaction.state.log.replication.factor": "1"
+      "transaction.state.log.min.isr": "1"
+      "min.insync.replicas": "1"
+  entityOperator:
+    template:
+      pod:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: In
+                      values:
+                        - "true"
+    topicOperator: {}
+    userOperator: {}
+  kafkaExporter:
+    template:
+      pod:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: In
+                      values:
+                        - "true"

@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: theodolite-kafka-exporter-podmonitor
+  namespace: default
+  labels:
+    app: theodolite
+spec:
+  selector:
+    selector:
+    matchLabels:
+      strimzi.io/name: theodolite-kafka-kafka-exporter
+  podMetricsEndpoints:
+  - path: /metrics
+    port: tcp-prometheus
+    interval: 5s
+    metricRelabelings:
+      - action: replace
+        sourceLabels:
+          - __meta_kubernetes_pod_node_name
+        targetLabel: node

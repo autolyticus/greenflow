@@ -1,0 +1,53 @@
+# Default values for kminion.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: registry.gitlab.inria.fr/gkovilkk/greenflow/kminion
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v2.2.8"
+
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+serviceMonitor:
+  create: true
+  additionalLabels: {}
+  honorLabels: false
+  scrapeTimeout: 5s
+  interval: 5s
+  relabelings: []
+  # - sourceLabels: [__meta_kubernetes_pod_label_my_label]
+  #   separator: ;
+  #   regex: (.*)
+  #   targetLabel: my_label
+  #   replacement: $1
+  #   action: replace
+
+kminion:
+  # KMinion can be configured using environment variables and/or a YAML config. The yaml contents under config will
+  # end up in a YAML file which will be mounted into the kminion container.
+  # See reference config: https://github.com/cloudhut/kminion/blob/master/docs/reference-config.yaml
+  config:
+    minion:
+      endToEnd:
+        enabled: true
+        probeInterval: 500ms # how often to send end-to-end test messages
+        topicManagement:
+          enabled: true
+          reconciliationInterval: 30s
+          replicationFactor: 3
+          # partitionsPerBroker: 300
+    kafka:
+      brokers:
+        - "theodolite-kafka-kafka-bootstrap.default.svc.cluster.local:9092"
+logger:
+  level: debug

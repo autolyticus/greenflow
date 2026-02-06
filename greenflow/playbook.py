@@ -14,6 +14,7 @@ __all__ = [
     "prometheus",
     "strimzi",
     "kafka",
+    "kafka_kraft",
     "theodolite",
     "killexp",
     "redpanda",
@@ -43,6 +44,7 @@ scaphandre = "scaphandre"
 prometheus = "prometheus"
 strimzi = "strimzi"
 kafka = "kafka"
+kafka_kraft = "kafka-kraft"
 theodolite = "theodolite"
 killexp = "killexp"
 redpanda = "redpanda"

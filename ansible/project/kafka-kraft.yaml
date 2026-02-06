@@ -1,0 +1,7 @@
+---
+# vim: set ft=yaml:
+- name: Deploying Kafka CRD
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - kafka
